@@ -168,11 +168,16 @@ export default async function IncidentsPage({
                     page.items.map((incident) => (
                       <tr key={incident.id} className="border-t border-zinc-800">
                         <td className="px-3 py-3 whitespace-nowrap text-zinc-200">
-                          {incident.date ? (
-                            <time dateTime={incident.date}>{formatRecordDate(incident.date)}</time>
-                          ) : (
-                            "غير معروف"
-                          )}
+                          <Link
+                            href={`/incidents/${incident.id}`}
+                            className="font-semibold text-sky-300 underline-offset-4 hover:underline"
+                          >
+                            {incident.date ? (
+                              <time dateTime={incident.date}>{formatRecordDate(incident.date)}</time>
+                            ) : (
+                              "ملف الحادثة"
+                            )}
+                          </Link>
                         </td>
                         <td className="px-3 py-3 text-zinc-200">{incident.migrationRoute ?? "غير معروف"}</td>
                         <td className="px-3 py-3 text-zinc-300">{incident.location ?? "غير معروف"}</td>

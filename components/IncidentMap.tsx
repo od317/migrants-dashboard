@@ -40,6 +40,7 @@ function popupHtml(incident: IncidentRecord): string {
       <p style="margin:0 0 8px"><strong>سبب الوفاة</strong><br>${escapeHtml(incident.causeOfDeath ?? "غير مذكور")}</p>
       <p style="margin:0 0 8px"><strong>الوفيات والمفقودين</strong><br>${incident.deadAndMissing.toLocaleString("en-US")}</p>
       <p style="margin:0 0 8px"><strong>المصدر الموثق</strong><br>${escapeHtml(incident.sourceOrg)}</p>
+      <p style="margin:0 0 8px"><a href="/incidents/${escapeHtml(incident.id)}">ملف الحادثة</a></p>
       ${source}
     </div>
   `;

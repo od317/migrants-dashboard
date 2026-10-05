@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Cairo, Geist_Mono, Noto_Naskh_Arabic } from "next/font/google";
-import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { AppFrame } from "@/components/app-frame";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -37,10 +37,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       dir="rtl"
       className={`${cairo.variable} ${notoNaskh.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col font-sans">
-        <SiteHeader />
-        <div className="flex-1">{children}</div>
-        <SiteFooter />
+      <body className="min-h-full font-sans">
+        <AppFrame>{children}</AppFrame>
       </body>
     </html>
   );

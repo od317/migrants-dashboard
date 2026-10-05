@@ -153,3 +153,85 @@ export const getProfileById = cache(async function getProfileById(
 ): Promise<ApiResult<ProfileDetail>> {
   return getJson<ProfileDetail>(`/api/profiles/${encodeURIComponent(id)}`);
 });
+
+export type SubmissionStatus = "PENDING_REVIEW" | "UNDER_INVESTIGATION" | "MATCH_FOUND" | "ARCHIVED";
+
+export type AdminSubmission = {
+  id: string;
+  missingPersonName: string;
+  dateOfLoss: string | null;
+  lastKnownLocation: string | null;
+  status: SubmissionStatus;
+  createdAt: string;
+  reporterName: string;
+  reporterContact: string;
+  relationship: string | null;
+  approximateAge: number | null;
+  smugglerDetails: string | null;
+  physicalMarks: string | null;
+};
+
+export type IncidentSuggestion = {
+  incidentId: string;
+  date: string | null;
+  location: string | null;
+  casualties: number | null;
+  confidence: number;
+  reason: string;
+};
+
+async function adminRequest<T>(apiKey: string, path: string, init?: RequestInit): Promise<ApiResult<T>> {
+  const url = `${apiBase()}${path}`;
+  try {
+    const response = await fetch(url, {
+      ...init,
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        "x-api-key": apiKey,
+        ...(init?.headers ?? {}),
+      },
+    });
+    if (!response.ok) {
+      console.error(`API ${response.status}: ${url}`);
+      return { ok: false, status: response.status };
+    }
+    return { ok: true, data: (await response.json()) as T };
+  } catch (error) {
+    console.error(`API unreachable: ${url}`, error);
+    return { ok: false, status: null };
+  }
+}
+
+export async function listAdminSubmissions(apiKey: string): Promise<ApiResult<AdminSubmission[]>> {
+  const result = await adminRequest<AdminSubmission[]>(apiKey, "/api/submissions");
+  if (!result.ok) return result;
+  return { ok: true, data: Array.isArray(result.data) ? result.data : [] };
+}
+
+export async function getSubmissionSuggestions(
+  apiKey: string,
+  id: string,
+): Promise<ApiResult<{ suggestions: IncidentSuggestion[] }>> {
+  const result = await adminRequest<{ suggestions: IncidentSuggestion[] }>(
+    apiKey,
+    `/api/submissions/${encodeURIComponent(id)}/suggestions`,
+  );
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    data: { suggestions: Array.isArray(result.data.suggestions) ? result.data.suggestions : [] },
+  };
+}
+
+export async function updateAdminSubmissionStatus(
+  apiKey: string,
+  id: string,
+  status: SubmissionStatus,
+): Promise<ApiResult<AdminSubmission>> {
+  return adminRequest<AdminSubmission>(apiKey, `/api/submissions/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+}

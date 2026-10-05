@@ -260,3 +260,86 @@ export async function getSourceOrganizations(): Promise<SourceOrganization[]> {
 export const INCIDENT_YEARS = Array.from({ length: 2026 - 2014 + 1 }, (_, index) => 2026 - index);
 
 export const INCIDENT_LIMITS = PAGE_LIMITS;
+
+export type IncidentOrganization = {
+  id: string;
+  name: string;
+  acronym: string | null;
+  reliabilityScore: number;
+  url: string | null;
+};
+
+export type IncidentClaim = {
+  id: string;
+  fromSourceFile: boolean;
+  organization: IncidentOrganization;
+  reportedDead: number | null;
+  reportedMissing: number | null;
+  reportedSurvivors: number | null;
+  reportedDate: string | null;
+  summary: string;
+  sourceUrl: string | null;
+  sourceQuality: number | null;
+  createdAt: string;
+};
+
+export type EvidenceType =
+  | "LEAK"
+  | "SURVIVOR_TESTIMONY"
+  | "INVESTIGATIVE_REPORT"
+  | "OFFICIAL_STATEMENT"
+  | "SATELLITE_IMAGERY";
+
+export type IncidentEvidenceItem = {
+  id: string;
+  type: EvidenceType;
+  title: string;
+  description: string;
+  fileUrl: string | null;
+  submittedBy: string | null;
+  isVerified: boolean;
+  createdAt: string;
+};
+
+export type IncidentDossier = {
+  id: string;
+  sourceRecordId: string | null;
+  date: string | null;
+  location: string | null;
+  region: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  coordinates: string | null;
+  route: string | null;
+  causeOfDeath: string | null;
+  totalCasualties: number | null;
+  sourceOrg: IncidentOrganization;
+  demographics: {
+    men: number | null;
+    women: number | null;
+    children: number | null;
+  };
+  claims: IncidentClaim[];
+  evidence: IncidentEvidenceItem[];
+  contradictions: {
+    detected: boolean;
+    disagreements: Array<{
+      field: "reportedDead" | "reportedMissing" | "reportedSurvivors" | "reportedDate";
+      values: Array<{ organizationName: string; value: number | string | null }>;
+    }>;
+  };
+};
+
+export async function getIncidentDossier(
+  id: string,
+): Promise<{ ok: true; data: IncidentDossier } | { ok: false; status: number | null }> {
+  const url = `${apiBase()}/api/incidents/${encodeURIComponent(id)}`;
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) return { ok: false, status: response.status };
+    return { ok: true, data: (await response.json()) as IncidentDossier };
+  } catch (error) {
+    console.error(`Incidents API unreachable: ${url}`, error);
+    return { ok: false, status: null };
+  }
+}

@@ -7,7 +7,9 @@ const LINKS = [
   { href: "/", label: "لوحة التحليلات والتقارير" },
   { href: "/incidents", label: "خريطة الحوادث والمسارات" },
   { href: "/records", label: "الملفات والمصادر" },
+  { href: "/upload", label: "رفع الملفات والبيانات" },
   { href: "/search", label: "البحث الفردي" },
+  { href: "/report", label: "الإبلاغ عن مفقود" },
 ] as const;
 
 export function SiteNav() {
