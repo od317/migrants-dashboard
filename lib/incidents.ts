@@ -94,7 +94,6 @@ type ApiStats = {
 
 export function apiBase(): string {
   return (
-    process.env.NEXT_PUBLIC_MIGRANTS_API_URL ||
     process.env.MIGRANTS_API_URL ||
     "http://127.0.0.1:3010"
   );
