@@ -13,7 +13,7 @@ const markerIcon = L.divIcon({
 
 export default function IncidentPointMap({ lat, lng }: { lat: number; lng: number }) {
   return (
-    <div className="incident-map h-44 overflow-hidden rounded-xl border border-zinc-700">
+    <div className="incident-map relative isolate z-0 h-44 overflow-hidden rounded-xl border border-zinc-700">
       <MapContainer
         center={[lat, lng]}
         zoom={8}

@@ -89,7 +89,7 @@ export default function IncidentMap({
   className?: string;
 }) {
   return (
-    <div className={`incident-map overflow-hidden rounded-xl border border-zinc-700 ${className}`}>
+    <div className={`incident-map relative isolate z-0 overflow-hidden rounded-xl border border-zinc-700 ${className}`}>
       <MapContainer
         center={[34.5, 18]}
         zoom={4}
