@@ -5,6 +5,7 @@ import { IncidentPointMapLoader } from "@/components/incident-point-map-loader";
 import { formatRecordDate } from "@/lib/format";
 import {
   apiBase,
+  incidentPdfUrl,
   reportingBodyLabel,
   type EvidenceType,
   type IncidentClaim,
@@ -43,6 +44,13 @@ export function IncidentDossierView({ dossier }: { dossier: IncidentDossier }) {
         <p className="text-xs font-semibold tracking-[0.16em] text-zinc-400">ملف الحادثة</p>
         <h1 className="mt-2 font-serif text-3xl tracking-tight text-zinc-50 sm:text-4xl">{code}</h1>
         <p className="mt-2 font-mono text-xs text-zinc-500">{dossier.id}</p>
+        <a
+          href={incidentPdfUrl(dossier.id)}
+          download={`${dossier.id}.pdf`}
+          className="mt-4 inline-flex rounded-lg border border-zinc-600 px-3 py-1.5 text-sm font-semibold text-sky-300 underline-offset-4 hover:bg-zinc-800 hover:underline"
+        >
+          تنزيل ملف PDF
+        </a>
         {dossier.location ? <p className="mt-3 text-sm leading-6 text-zinc-300">{dossier.location}</p> : null}
         {dossier.causeOfDeath ? (
           <p className="mt-1 text-sm text-zinc-400">السبب المسجّل: {dossier.causeOfDeath}</p>

@@ -48,11 +48,32 @@ export type IncidentQuery = {
   year?: string;
   sourceOrg?: string;
   search?: string;
+  causeOfDeath?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  minCasualties?: number;
+  maxCasualties?: number;
+  hasEvidence?: boolean;
+  evidenceType?: EvidenceType;
+  sort?: IncidentSort;
   limit?: number;
   offset?: number;
 };
 
-const PAGE_LIMITS = [25, 50, 100] as const;
+export type IncidentSort = "date_asc" | "casualties_desc" | "casualties_asc";
+
+export type IncidentFacetOption = { value: string; count: number };
+
+export type IncidentFacets = {
+  routes: IncidentFacetOption[];
+  causes: IncidentFacetOption[];
+  statuses: IncidentFacetOption[];
+  years: IncidentFacetOption[];
+  sourceOrgs: IncidentFacetOption[];
+};
+
+const PAGE_LIMITS = [20, 25, 50, 100] as const;
 const MAP_PAGE_SIZE = 100;
 
 type ApiIncident = {
@@ -99,6 +120,10 @@ export function apiBase(): string {
   );
 }
 
+export function incidentPdfUrl(id: string): string {
+  return `/api/incidents/${encodeURIComponent(id)}/pdf`;
+}
+
 export function reportingBodyLabel(name: string): string {
   if (/syrian observatory for human rights/i.test(name)) return "SOHR";
   return name;
@@ -134,19 +159,34 @@ export function normalizeOffset(value: string | undefined): number {
   return parsed;
 }
 
-function queryString(query: IncidentQuery): string {
+export function incidentQueryString(query: IncidentQuery): string {
   const params = new URLSearchParams();
   if (query.route) params.set("route", query.route);
   if (query.year) params.set("year", query.year);
   if (query.sourceOrg) params.set("sourceOrg", query.sourceOrg);
   if (query.search) params.set("search", query.search);
+  if (query.causeOfDeath) params.set("causeOfDeath", query.causeOfDeath);
+  if (query.status) params.set("status", query.status);
+  if (query.dateFrom) params.set("dateFrom", query.dateFrom);
+  if (query.dateTo) params.set("dateTo", query.dateTo);
+  if (query.minCasualties != null) params.set("minCasualties", String(query.minCasualties));
+  if (query.maxCasualties != null) params.set("maxCasualties", String(query.maxCasualties));
+  if (query.hasEvidence !== undefined) params.set("hasEvidence", String(query.hasEvidence));
+  if (query.evidenceType) params.set("evidenceType", query.evidenceType);
+  if (query.sort) params.set("sort", query.sort);
   if (query.limit) params.set("limit", String(query.limit));
   if (query.offset) params.set("offset", String(query.offset));
-  const text = params.toString();
-  return text ? `?${text}` : "";
+  return params.toString();
 }
 
 const EMPTY_LIST_PAYLOAD = { data: [] as ApiIncident[], total: 0 };
+const EMPTY_FACETS: IncidentFacets = {
+  routes: [],
+  causes: [],
+  statuses: [],
+  years: [],
+  sourceOrgs: [],
+};
 
 async function getJson<T>(path: string): Promise<T | null> {
   const url = `${apiBase()}${path}`;
@@ -220,8 +260,13 @@ export async function getIncidentStats(): Promise<IncidentStats> {
   };
 }
 
+export async function getIncidentFacets(): Promise<IncidentFacets> {
+  return (await getJson<IncidentFacets>("/api/incidents/facets")) ?? EMPTY_FACETS;
+}
+
 export async function getIncidents(query: IncidentQuery): Promise<IncidentList> {
-  const page = (await getJson<ApiList>(`/api/incidents${queryString(query)}`)) ?? {
+  const queryText = incidentQueryString(query);
+  const page = (await getJson<ApiList>(`/api/incidents${queryText ? `?${queryText}` : ""}`)) ?? {
     ...EMPTY_LIST_PAYLOAD,
     limit: query.limit ?? 25,
     offset: query.offset ?? 0,

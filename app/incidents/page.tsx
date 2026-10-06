@@ -5,13 +5,20 @@ import { IncidentFilters } from "@/components/incident-filters";
 import { IncidentMapLoader } from "@/components/incident-map-loader";
 import { formatRecordDate } from "@/lib/format";
 import {
+  getIncidentFacets,
   getIncidentMap,
   getIncidentStats,
   getIncidents,
   getSourceOrganizations,
+  incidentQueryString,
+  incidentPdfUrl,
+  INCIDENT_YEARS,
   normalizeLimit,
   normalizeOffset,
+  type EvidenceType,
+  type IncidentFacets,
   type IncidentQuery,
+  type IncidentSort,
 } from "@/lib/incidents";
 
 export const metadata: Metadata = {
@@ -26,9 +33,26 @@ type SearchParams = {
   year?: string;
   sourceOrg?: string;
   search?: string;
+  causeOfDeath?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  minCasualties?: string;
+  maxCasualties?: string;
+  hasEvidence?: string;
+  evidenceType?: string;
+  sort?: string;
   limit?: string;
   offset?: string;
 };
+
+const EVIDENCE_TYPES: EvidenceType[] = [
+  "LEAK",
+  "SURVIVOR_TESTIMONY",
+  "INVESTIGATIVE_REPORT",
+  "OFFICIAL_STATEMENT",
+  "SATELLITE_IMAGERY",
+];
 
 function readFilters(params: SearchParams): IncidentQuery {
   const year = params.year && /^\d{4}$/.test(params.year) ? params.year : undefined;
@@ -37,21 +61,69 @@ function readFilters(params: SearchParams): IncidentQuery {
     year,
     sourceOrg: params.sourceOrg?.trim() || undefined,
     search: params.search?.trim() || undefined,
+    causeOfDeath: params.causeOfDeath?.trim() || undefined,
+    status: params.status?.trim() || undefined,
+    dateFrom: parseDate(params.dateFrom),
+    dateTo: parseDate(params.dateTo),
+    minCasualties: parseNonnegativeNumber(params.minCasualties),
+    maxCasualties: parseNonnegativeNumber(params.maxCasualties),
+    hasEvidence:
+      params.hasEvidence === "true" ? true : params.hasEvidence === "false" ? false : undefined,
+    evidenceType: isEvidenceType(params.evidenceType) ? params.evidenceType : undefined,
+    sort: parseSort(params.sort),
     limit: normalizeLimit(params.limit),
     offset: normalizeOffset(params.offset),
   };
 }
 
 function hrefFor(filters: IncidentQuery, offset: number): string {
-  const params = new URLSearchParams();
-  if (filters.search) params.set("search", filters.search);
-  if (filters.route) params.set("route", filters.route);
-  if (filters.year) params.set("year", filters.year);
-  if (filters.sourceOrg) params.set("sourceOrg", filters.sourceOrg);
-  params.set("limit", String(filters.limit ?? 25));
-  if (offset > 0) params.set("offset", String(offset));
-  const query = params.toString();
+  const query = incidentQueryString({ ...filters, offset });
   return query ? `/incidents?${query}` : "/incidents";
+}
+
+function parseDate(value: string | undefined): string | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(parsed.valueOf()) || parsed.toISOString().slice(0, 10) !== value
+    ? undefined
+    : value;
+}
+
+function parseNonnegativeNumber(value: string | undefined): number | undefined {
+  if (!value?.trim()) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function parseSort(value: string | undefined): IncidentSort | undefined {
+  return value === "date_asc" || value === "casualties_desc" || value === "casualties_asc"
+    ? value
+    : undefined;
+}
+
+function isEvidenceType(value: string | undefined): value is EvidenceType {
+  return value != null && EVIDENCE_TYPES.includes(value as EvidenceType);
+}
+
+function buildFilterFacets(facets: IncidentFacets, sources: Awaited<ReturnType<typeof getSourceOrganizations>>, routes: Awaited<ReturnType<typeof getIncidentStats>>["routes"]): IncidentFacets {
+  return {
+    routes: facets.routes.length
+      ? facets.routes
+      : routes.map((route) => ({ value: route.route, count: route.incidents })),
+    causes: facets.causes,
+    statuses: facets.statuses.length
+      ? facets.statuses
+      : [
+          { value: "DECEASED_OR_MISSING", count: 0 },
+          { value: "FATALITY_EVENT", count: 0 },
+        ],
+    years: facets.years.length
+      ? facets.years
+      : INCIDENT_YEARS.map((year) => ({ value: String(year), count: 0 })),
+    sourceOrgs: facets.sourceOrgs.length
+      ? facets.sourceOrgs
+      : sources.map((source) => ({ value: source.name, count: source.rawRecordCount })),
+  };
 }
 
 export default async function IncidentsPage({
@@ -60,7 +132,8 @@ export default async function IncidentsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const filters = readFilters(await searchParams);
-  const { stats, page, mapped, sources } = await loadIncidents(filters);
+  const { stats, page, mapped, sources, facets } = await loadIncidents(filters);
+  const filterFacets = buildFilterFacets(facets, sources, stats.routes);
   const limit = page.limit;
     const start = page.total === 0 ? 0 : page.offset + 1;
     const end = Math.min(page.offset + page.items.length, page.total);
@@ -135,18 +208,23 @@ export default async function IncidentsPage({
                   route: filters.route ?? "",
                   year: filters.year ?? "",
                   sourceOrg: filters.sourceOrg ?? "",
+                  causeOfDeath: filters.causeOfDeath ?? "",
+                  status: filters.status ?? "",
+                  dateFrom: filters.dateFrom ?? "",
+                  dateTo: filters.dateTo ?? "",
+                  minCasualties: filters.minCasualties,
+                  maxCasualties: filters.maxCasualties,
+                  hasEvidence: filters.hasEvidence,
+                  evidenceType: filters.evidenceType ?? "",
+                  sort: filters.sort ?? "",
                   limit,
                 }}
-                routes={stats.routes.map((route) => route.route)}
-                sources={sources.map((source) => ({
-                  name: source.name,
-                  acronym: source.acronym,
-                }))}
+                facets={filterFacets}
               />
             </div>
 
             <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-700">
-              <table className="min-w-[880px] w-full border-collapse text-start text-sm">
+              <table className="min-w-220 w-full border-collapse text-start text-sm">
                 <thead className="bg-zinc-900 text-xs tracking-wide text-zinc-400">
                   <tr>
                     <th className="px-3 py-3 font-semibold">التاريخ</th>
@@ -178,6 +256,14 @@ export default async function IncidentsPage({
                               "ملف الحادثة"
                             )}
                           </Link>
+                          <a
+                            href={incidentPdfUrl(incident.id)}
+                            download={`${incident.id}.pdf`}
+                            aria-label={`تنزيل PDF للحادثة ${incident.id}`}
+                            className="mt-1 inline-flex font-semibold text-sky-300 underline-offset-4 hover:underline"
+                          >
+                            تنزيل PDF
+                          </a>
                         </td>
                         <td className="px-3 py-3 text-zinc-200">{incident.migrationRoute ?? "غير معروف"}</td>
                         <td className="px-3 py-3 text-zinc-300">{incident.location ?? "غير معروف"}</td>
@@ -255,13 +341,14 @@ export default async function IncidentsPage({
 }
 
 async function loadIncidents(filters: IncidentQuery) {
-  const [stats, page, mapped, sources] = await Promise.all([
+  const [stats, page, mapped, sources, facets] = await Promise.all([
     getIncidentStats(),
     getIncidents(filters),
     getIncidentMap(filters),
     getSourceOrganizations(),
+    getIncidentFacets(),
   ]);
-  return { stats, page, mapped, sources };
+  return { stats, page, mapped, sources, facets };
 }
 
 function Metric({ label, value, text = false }: { label: string; value: string; text?: boolean }) {

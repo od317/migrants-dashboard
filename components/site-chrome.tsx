@@ -4,8 +4,8 @@ import { SiteNav } from "@/components/site-nav";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-        <Link href="/" className="flex items-center gap-3 rounded-md">
+      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 px-4 py-3 sm:px-6 lg:flex lg:justify-between">
+        <Link href="/" className="flex min-w-0 items-center gap-3 rounded-md">
           <span className="grid size-9 shrink-0 place-items-center rounded-md bg-teal text-sm font-semibold text-white">
             ق
           </span>
@@ -13,7 +13,9 @@ export function SiteHeader() {
             <span className="block text-sm font-semibold tracking-tight text-ink">
               مركز التحليلات والتقارير الموثقة
             </span>
-            <span className="block text-xs text-muted">المرصد الموحد لبيانات الهجرة والنزاع</span>
+            <span className="hidden text-xs text-muted sm:block">
+              المرصد الموحد لبيانات الهجرة والنزاع
+            </span>
           </span>
         </Link>
         <SiteNav />
