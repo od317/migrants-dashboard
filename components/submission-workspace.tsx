@@ -109,7 +109,7 @@ export function SubmissionWorkspace() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold tracking-[0.16em] text-amber-200/90">منطقة آمنة</p>
-          <h1 className="mt-2 font-serif text-3xl tracking-tight text-zinc-50 sm:text-4xl">
+          <h1 className="mt-2 font-serif text-2xl tracking-tight text-zinc-50 sm:text-4xl">
             مساحة عمل الباحثين - مراجعة البلاغات
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
@@ -183,56 +183,85 @@ export function SubmissionWorkspace() {
             </p>
           ) : null}
 
-          <div className="mt-4 overflow-x-auto rounded-2xl border border-zinc-700">
-            <table className="min-w-full text-right text-sm">
-              <thead className="bg-zinc-900 text-zinc-400">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">تاريخ الإرسال</th>
-                  <th className="px-4 py-3 font-semibold">اسم المُبلغ</th>
-                  <th className="px-4 py-3 font-semibold">اسم المفقود</th>
-                  <th className="px-4 py-3 font-semibold">تاريخ فقدان الاتصال</th>
-                  <th className="px-4 py-3 font-semibold">الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-zinc-400">
-                      جارٍ تحميل البلاغات…
-                    </td>
-                  </tr>
-                ) : visible.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-zinc-400">
-                      لا توجد بلاغات في هذا التصنيف.
-                    </td>
-                  </tr>
-                ) : (
-                  visible.map((report) => (
-                    <tr key={report.id} className="border-t border-zinc-800 bg-zinc-950/40">
-                      <td className="px-4 py-3 text-zinc-300">{formatRecordDate(report.createdAt)}</td>
-                      <td className="px-4 py-3">{report.reporterName}</td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => setSelected(report)}
-                          className="font-semibold text-sky-300 underline-offset-4 hover:underline"
-                        >
-                          {report.missingPersonName}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3 text-zinc-300">
-                        {report.dateOfLoss ? formatRecordDate(report.dateOfLoss) : "غير مذكور"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={report.status} />
-                      </td>
+          {loading ? (
+            <p className="mt-4 text-sm text-zinc-400">جارٍ تحميل البلاغات…</p>
+          ) : visible.length === 0 ? (
+            <p className="mt-4 text-sm text-zinc-400">لا توجد بلاغات في هذا التصنيف.</p>
+          ) : (
+            <>
+              <ul className="mt-4 grid gap-3 md:hidden">
+                {visible.map((report) => (
+                  <li key={report.id} className="rounded-xl border border-zinc-700 bg-zinc-950/40 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelected(report)}
+                        className="text-start font-semibold text-sky-300 underline-offset-4 hover:underline"
+                      >
+                        {report.missingPersonName}
+                      </button>
+                      <StatusBadge status={report.status} />
+                    </div>
+                    <dl className="mt-3 space-y-2 text-sm">
+                      <div>
+                        <dt className="text-xs text-zinc-500">اسم المُبلغ</dt>
+                        <dd className="text-zinc-100">{report.reporterName}</dd>
+                      </div>
+                      <div className="flex flex-wrap gap-x-6 gap-y-2 text-zinc-300">
+                        <div>
+                          <dt className="text-xs text-zinc-500">تاريخ الإرسال</dt>
+                          <dd>{formatRecordDate(report.createdAt)}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-zinc-500">تاريخ فقدان الاتصال</dt>
+                          <dd>{report.dateOfLoss ? formatRecordDate(report.dateOfLoss) : "غير مذكور"}</dd>
+                        </div>
+                      </div>
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-4 hidden overflow-x-auto rounded-2xl border border-zinc-700 md:block">
+                <table className="w-full min-w-[48rem] text-right text-sm">
+                  <thead className="bg-zinc-900 text-zinc-400">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">تاريخ الإرسال</th>
+                      <th className="px-4 py-3 font-semibold">اسم المُبلغ</th>
+                      <th className="px-4 py-3 font-semibold">اسم المفقود</th>
+                      <th className="px-4 py-3 font-semibold">تاريخ فقدان الاتصال</th>
+                      <th className="px-4 py-3 font-semibold">الحالة</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {visible.map((report) => (
+                      <tr key={report.id} className="border-t border-zinc-800 bg-zinc-950/40">
+                        <td className="px-4 py-3 whitespace-nowrap text-zinc-300">
+                          {formatRecordDate(report.createdAt)}
+                        </td>
+                        <td className="px-4 py-3">{report.reporterName}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelected(report)}
+                            className="font-semibold text-sky-300 underline-offset-4 hover:underline"
+                          >
+                            {report.missingPersonName}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-zinc-300">
+                          {report.dateOfLoss ? formatRecordDate(report.dateOfLoss) : "غير مذكور"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={report.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </>
       )}
 

@@ -30,7 +30,7 @@ export function SiteNav() {
       </button>
       <nav
         id="site-navigation"
-        className={`${isOpen ? "grid" : "hidden"} col-span-2 grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 lg:flex lg:items-center lg:gap-x-4 lg:gap-y-2 lg:border-0 lg:pt-0`}
+        className={`${isOpen ? "grid" : "hidden"} col-span-2 grid-cols-1 gap-y-1 border-t border-line pt-3 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-2 lg:flex lg:flex-wrap lg:items-center lg:gap-x-4 lg:gap-y-2 lg:border-0 lg:pt-0`}
       >
         {LINKS.map((link) => {
           const active =

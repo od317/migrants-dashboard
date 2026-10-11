@@ -33,7 +33,7 @@ function popupHtml(incident: IncidentRecord): string {
     ? `<a href="${escapeHtml(incident.sourceUrl)}" target="_blank" rel="noopener noreferrer">عرض التقرير الأصلي</a>`
     : `<span>لا يوجد رابط عام</span>`;
   return `
-    <div dir="rtl" style="min-width:220px;font-family:Cairo,Segoe UI,sans-serif;text-align:right">
+    <div dir="rtl" style="max-width:min(240px,70vw);font-family:Cairo,Segoe UI,sans-serif;text-align:right;word-break:break-word">
       <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.04em;color:#a8a29e">حادثة</p>
       <p style="margin:0 0 8px"><strong>تاريخ الحادثة</strong><br>${escapeHtml(incident.date ?? "غير معروف")}</p>
       <p style="margin:0 0 8px"><strong>المسار</strong><br>${escapeHtml(incident.migrationRoute ?? "غير معروف")}</p>
@@ -83,13 +83,13 @@ function IncidentClusters({ incidents }: { incidents: IncidentRecord[] }) {
 
 export default function IncidentMap({
   incidents,
-  className = "h-[480px]",
+  className = "h-[min(480px,70vh)] min-h-64",
 }: {
   incidents: IncidentRecord[];
   className?: string;
 }) {
   return (
-    <div className={`incident-map relative isolate z-0 overflow-hidden rounded-xl border border-zinc-700 ${className}`}>
+    <div className={`incident-map relative isolate z-0 max-w-full overflow-hidden rounded-xl border border-zinc-700 ${className}`}>
       <MapContainer
         center={[34.5, 18]}
         zoom={4}

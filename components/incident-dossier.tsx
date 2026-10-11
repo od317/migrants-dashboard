@@ -35,15 +35,15 @@ export function IncidentDossierView({ dossier }: { dossier: IncidentDossier }) {
   const code = dossier.sourceRecordId ?? dossier.id;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <div className="mx-auto w-full max-w-6xl min-w-0 px-4 py-8 sm:px-6 sm:py-10">
       <Link href="/incidents" className="text-sm font-semibold text-sky-300">
         العودة إلى سجل الحوادث
       </Link>
 
-      <header className="mt-5 rounded-2xl border border-zinc-700 bg-zinc-900/80 p-5 sm:p-7">
+      <header className="mt-5 overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900/80 p-5 sm:p-7">
         <p className="text-xs font-semibold tracking-[0.16em] text-zinc-400">ملف الحادثة</p>
-        <h1 className="mt-2 font-serif text-3xl tracking-tight text-zinc-50 sm:text-4xl">{code}</h1>
-        <p className="mt-2 font-mono text-xs text-zinc-500">{dossier.id}</p>
+        <h1 className="mt-2 break-words font-serif text-2xl tracking-tight text-zinc-50 sm:text-4xl">{code}</h1>
+        <p className="mt-2 break-all font-mono text-xs text-zinc-500">{dossier.id}</p>
         <a
           href={incidentPdfUrl(dossier.id)}
           download={`${dossier.id}.pdf`}
@@ -59,9 +59,9 @@ export function IncidentDossierView({ dossier }: { dossier: IncidentDossier }) {
         <dl className="mt-5 flex flex-wrap gap-3">
           <Fact label="التاريخ" value={dossier.date ? formatRecordDate(dossier.date) : "غير معروف"} />
           <Fact label="المنطقة" value={dossier.region ?? "غير مسجّلة"} />
-          <div className="rounded-full border border-zinc-600 px-3 py-1 text-sm text-zinc-100">
+          <div className="max-w-full rounded-xl border border-zinc-600 px-3 py-1 text-sm text-zinc-100 sm:rounded-full">
             <span className="text-zinc-400">المسار </span>
-            {dossier.route ?? "غير معروف"}
+            <span className="break-words">{dossier.route ?? "غير معروف"}</span>
           </div>
         </dl>
 
@@ -225,9 +225,9 @@ function EvidenceCard({ item }: { item: IncidentEvidenceItem }) {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-full border border-zinc-700 px-3 py-1 text-sm">
+    <div className="max-w-full rounded-xl border border-zinc-700 px-3 py-1 text-sm sm:rounded-full">
       <span className="text-zinc-400">{label} </span>
-      <span className="text-zinc-100">{value}</span>
+      <span className="break-words text-zinc-100">{value}</span>
     </div>
   );
 }

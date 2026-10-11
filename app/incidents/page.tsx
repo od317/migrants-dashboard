@@ -142,12 +142,12 @@ export default async function IncidentsPage({
     const maxCasualties = Math.max(...stats.routes.map((route) => route.casualties), 1);
 
     return (
-      <main className="min-h-full bg-[#121417] text-zinc-100">
+      <main className="min-h-full w-full bg-[#121417] text-zinc-100">
         <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
           <p className="text-xs font-semibold tracking-[0.16em] text-zinc-400">
             حوادث الهجرة والمصادر
           </p>
-          <h1 className="mt-2 font-serif text-4xl tracking-tight text-zinc-50">
+          <h1 className="mt-2 font-serif text-3xl tracking-tight text-zinc-50 sm:text-4xl">
             سجل الحوادث
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
@@ -169,9 +169,9 @@ export default async function IncidentsPage({
             <ul className="mt-4 space-y-3">
               {stats.routes.map((route) => (
                 <li key={route.route}>
-                  <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
-                    <span className="text-zinc-200">{route.route}</span>
-                    <span className="tabular-nums text-zinc-400">
+                  <div className="mb-1 flex flex-col gap-1 text-sm sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+                    <span className="min-w-0 break-words text-zinc-200">{route.route}</span>
+                    <span className="shrink-0 tabular-nums text-zinc-400">
                       {route.casualties.toLocaleString("en-US")} وفيات ومفقودون
                       <span className="text-zinc-500"> · {route.incidents} حوادث</span>
                     </span>
@@ -223,84 +223,133 @@ export default async function IncidentsPage({
               />
             </div>
 
-            <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-700">
-              <table className="min-w-220 w-full border-collapse text-start text-sm">
-                <thead className="bg-zinc-900 text-xs tracking-wide text-zinc-400">
-                  <tr>
-                    <th className="px-3 py-3 font-semibold">التاريخ</th>
-                    <th className="px-3 py-3 font-semibold">مسار الهجرة</th>
-                    <th className="px-3 py-3 font-semibold">الموقع</th>
-                    <th className="px-3 py-3 font-semibold">عدد الضحايا</th>
-                    <th className="px-3 py-3 font-semibold">المصدر والتوثيق</th>
-                    <th className="px-3 py-3 font-semibold">الرابط الأصلي</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {page.items.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-3 py-10 text-center text-zinc-400">
-                        لم يتم العثور على حوادث مطابقة للبحث.
-                      </td>
-                    </tr>
-                  ) : (
-                    page.items.map((incident) => (
-                      <tr key={incident.id} className="border-t border-zinc-800">
-                        <td className="px-3 py-3 whitespace-nowrap text-zinc-200">
-                          <Link
-                            href={`/incidents/${incident.id}`}
-                            className="font-semibold text-sky-300 underline-offset-4 hover:underline"
-                          >
-                            {incident.date ? (
-                              <time dateTime={incident.date}>{formatRecordDate(incident.date)}</time>
-                            ) : (
-                              "ملف الحادثة"
-                            )}
-                          </Link>
+            {page.items.length === 0 ? (
+              <p className="mt-4 rounded-xl border border-dashed border-zinc-700 px-4 py-10 text-center text-sm text-zinc-400">
+                لم يتم العثور على حوادث مطابقة للبحث.
+              </p>
+            ) : (
+              <>
+                <ul className="mt-4 grid gap-3 md:hidden">
+                  {page.items.map((incident) => (
+                    <li key={incident.id} className="rounded-xl border border-zinc-700 bg-zinc-900/70 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <Link
+                          href={`/incidents/${incident.id}`}
+                          className="font-semibold text-sky-300 underline-offset-4 hover:underline"
+                        >
+                          {incident.date ? (
+                            <time dateTime={incident.date}>{formatRecordDate(incident.date)}</time>
+                          ) : (
+                            "ملف الحادثة"
+                          )}
+                        </Link>
+                        <CasualtyBadge count={incident.deadAndMissing} />
+                      </div>
+                      <p className="mt-2 text-sm text-zinc-200">{incident.migrationRoute ?? "غير معروف"}</p>
+                      <p className="mt-1 text-sm leading-6 text-zinc-400">{incident.location ?? "غير معروف"}</p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className="text-sm text-zinc-100">
+                          {incident.sourceOrgAcronym ?? incident.sourceOrg}
+                        </span>
+                        <ReliabilityPill score={incident.reliabilityScore} />
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
+                        <a
+                          href={incidentPdfUrl(incident.id)}
+                          download={`${incident.id}.pdf`}
+                          className="text-sky-300 underline-offset-4 hover:underline"
+                        >
+                          تنزيل PDF
+                        </a>
+                        {incident.sourceUrl ? (
                           <a
-                            href={incidentPdfUrl(incident.id)}
-                            download={`${incident.id}.pdf`}
-                            aria-label={`تنزيل PDF للحادثة ${incident.id}`}
-                            className="mt-1 inline-flex font-semibold text-sky-300 underline-offset-4 hover:underline"
+                            href={incident.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-300 underline-offset-4 hover:underline"
                           >
-                            تنزيل PDF
+                            الرابط الأصلي
                           </a>
-                        </td>
-                        <td className="px-3 py-3 text-zinc-200">{incident.migrationRoute ?? "غير معروف"}</td>
-                        <td className="px-3 py-3 text-zinc-300">{incident.location ?? "غير معروف"}</td>
-                        <td className="px-3 py-3">
-                          <CasualtyBadge count={incident.deadAndMissing} />
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-zinc-100">
-                              {incident.sourceOrgAcronym ?? incident.sourceOrg}
-                            </span>
-                            <ReliabilityPill score={incident.reliabilityScore} />
-                          </div>
-                          {incident.sourceOrgAcronym ? (
-                            <p className="mt-1 text-xs text-zinc-500">{incident.sourceOrg}</p>
-                          ) : null}
-                        </td>
-                        <td className="px-3 py-3">
-                          {incident.sourceUrl ? (
-                            <a
-                              href={incident.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                        ) : (
+                          <span className="font-normal text-zinc-500">لا يوجد رابط</span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-4 hidden overflow-x-auto rounded-xl border border-zinc-700 md:block">
+                  <table className="w-full min-w-[64rem] border-collapse text-start text-sm">
+                    <thead className="bg-zinc-900 text-xs tracking-wide text-zinc-400">
+                      <tr>
+                        <th className="px-3 py-3 font-semibold">التاريخ</th>
+                        <th className="px-3 py-3 font-semibold">مسار الهجرة</th>
+                        <th className="px-3 py-3 font-semibold">الموقع</th>
+                        <th className="px-3 py-3 font-semibold">عدد الضحايا</th>
+                        <th className="px-3 py-3 font-semibold">المصدر والتوثيق</th>
+                        <th className="px-3 py-3 font-semibold">الرابط الأصلي</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {page.items.map((incident) => (
+                        <tr key={incident.id} className="border-t border-zinc-800">
+                          <td className="px-3 py-3 whitespace-nowrap text-zinc-200">
+                            <Link
+                              href={`/incidents/${incident.id}`}
                               className="font-semibold text-sky-300 underline-offset-4 hover:underline"
                             >
-                              الرابط الأصلي
+                              {incident.date ? (
+                                <time dateTime={incident.date}>{formatRecordDate(incident.date)}</time>
+                              ) : (
+                                "ملف الحادثة"
+                              )}
+                            </Link>
+                            <a
+                              href={incidentPdfUrl(incident.id)}
+                              download={`${incident.id}.pdf`}
+                              aria-label={`تنزيل PDF للحادثة ${incident.id}`}
+                              className="mt-1 inline-flex font-semibold text-sky-300 underline-offset-4 hover:underline"
+                            >
+                              تنزيل PDF
                             </a>
-                          ) : (
-                            <span className="text-zinc-500">لا يوجد رابط</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                          <td className="max-w-56 px-3 py-3 text-zinc-200">{incident.migrationRoute ?? "غير معروف"}</td>
+                          <td className="max-w-64 px-3 py-3 text-zinc-300">{incident.location ?? "غير معروف"}</td>
+                          <td className="px-3 py-3">
+                            <CasualtyBadge count={incident.deadAndMissing} />
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-zinc-100">
+                                {incident.sourceOrgAcronym ?? incident.sourceOrg}
+                              </span>
+                              <ReliabilityPill score={incident.reliabilityScore} />
+                            </div>
+                            {incident.sourceOrgAcronym ? (
+                              <p className="mt-1 text-xs text-zinc-500">{incident.sourceOrg}</p>
+                            ) : null}
+                          </td>
+                          <td className="px-3 py-3">
+                            {incident.sourceUrl ? (
+                              <a
+                                href={incident.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-semibold text-sky-300 underline-offset-4 hover:underline"
+                              >
+                                الرابط الأصلي
+                              </a>
+                            ) : (
+                              <span className="text-zinc-500">لا يوجد رابط</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-400">
               <p>

@@ -32,6 +32,12 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-cairo), "Segoe UI", sans-serif;
+  overflow-x: clip;
+}
+
+.incident-map .leaflet-popup-content {
+  margin: 10px 12px;
+  max-width: min(260px, 70vw);
 }
 
 ::selection {
